@@ -1,0 +1,63 @@
+# Chạy toàn bộ hệ thống: docker compose up -d --build
+# Web:      http://localhost:3000
+# API docs: http://localhost:3000/swagger-ui/index.html
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: sportbooking-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-123456}
+      MYSQL_DATABASE: sport_booking
+      TZ: Asia/Ho_Chi_Minh
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "3307:3306"   # cổng 3307 trên máy để không đụng MySQL cài sẵn
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PASSWORD:-123456}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build: ./backend
+    container_name: sportbooking-backend
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: mysql
+      DB_URL: jdbc:mysql://mysql:3306/sport_booking?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Ho_Chi_Minh
+      DB_USERNAME: root
+      DB_PASSWORD: ${DB_PASSWORD:-123456}
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production-please-32+}
+      FRONTEND_URL: http://localhost:3000
+      BACKEND_URL: http://localhost:3000
+      CORS_ORIGINS: http://localhost:3000
+      PAYMENT_MOCK: "true"
+      VNPAY_TMN_CODE: ${VNPAY_TMN_CODE:-}
+      VNPAY_HASH_SECRET: ${VNPAY_HASH_SECRET:-}
+      MOMO_PARTNER_CODE: ${MOMO_PARTNER_CODE:-}
+      MOMO_ACCESS_KEY: ${MOMO_ACCESS_KEY:-}
+      MOMO_SECRET_KEY: ${MOMO_SECRET_KEY:-}
+      MAIL_ENABLED: ${MAIL_ENABLED:-false}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - uploads:/app/uploads
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build: ./frontend
+    container_name: sportbooking-frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+
+volumes:
+  mysql-data:
+  uploads:

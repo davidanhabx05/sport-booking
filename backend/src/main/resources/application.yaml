@@ -1,0 +1,17 @@
+server:
+  port: ${PORT:8080}
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: sport-booking
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:mysql}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Ho_Chi_Minh
