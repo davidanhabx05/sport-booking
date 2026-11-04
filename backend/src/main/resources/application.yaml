@@ -15,3 +15,87 @@ spring:
       hibernate:
         jdbc:
           time_zone: Asia/Ho_Chi_Minh
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+  mvc:
+    async:
+      request-timeout: -1     # kết nối SSE do SseEmitter tự quản lý thời gian sống
+  # Gửi email thật: điền SMTP (ví dụ Gmail + App Password) và đặt MAIL_ENABLED=true
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+  jackson:
+    time-zone: Asia/Ho_Chi_Minh
+    serialization:
+      write-dates-as-timestamps: false
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+app:
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
+  backend-url: ${BACKEND_URL:http://localhost:8080}
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:3000}
+  jwt:
+    # ĐỔI giá trị này khi triển khai thật (tối thiểu 32 ký tự)
+    secret: ${JWT_SECRET:sport-booking-dev-secret-key-change-me-2026!!}
+    expiration-minutes: 1440
+  upload-dir: ${UPLOAD_DIR:./uploads}
+  mail:
+    enabled: ${MAIL_ENABLED:false}   # false = chỉ ghi nội dung email ra log
+    from: "SanNay <${MAIL_USERNAME:no-reply@sannay.vn}>"
+  booking:
+    hold-minutes: 10           # thời gian giữ chỗ chờ thanh toán
+    max-hours: 4               # tối đa số giờ / 1 lần đặt
+    max-days-ahead: 30         # được đặt trước tối đa bao nhiêu ngày
+    cancel-before-hours: 2     # khách được huỷ trước giờ chơi bao lâu
+    max-pending-per-user: 3    # số đơn chưa thanh toán tối đa / người
+    recurring-discount-min-weeks: 4   # đặt định kỳ từ 4 tuần...
+    recurring-discount-percent: 10    # ...được giảm 10%
+  seed:
+    enabled: ${SEED_DATA:true}
+  payment:
+    # Thanh toán thử (không cần tài khoản sandbox) – tắt khi chạy thật
+    mock-enabled: ${PAYMENT_MOCK:true}
+    vnpay:
+      # Đăng ký sandbox tại https://sandbox.vnpayment.vn/devreg/ để nhận TMN code & hash secret
+      tmn-code: ${VNPAY_TMN_CODE:}
+      hash-secret: ${VNPAY_HASH_SECRET:}
+      pay-url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+    momo:
+      # Lấy thông tin test tại https://developers.momo.vn
+      partner-code: ${MOMO_PARTNER_CODE:}
+      access-key: ${MOMO_ACCESS_KEY:}
+      secret-key: ${MOMO_SECRET_KEY:}
+      endpoint: https://test-payment.momo.vn/v2/gateway/api/create
+
+---
+spring:
+  config:
+    activate:
+      on-profile: mysql
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/sport_booking?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Ho_Chi_Minh}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:123456}
+
+---
+# Chạy nhanh không cần cài MySQL: SPRING_PROFILES_ACTIVE=h2
+# (xem dữ liệu bằng tab Database của IntelliJ, URL jdbc:h2:file:./data/sportbooking, user sa)
+spring:
+  config:
+    activate:
+      on-profile: h2
+  datasource:
+    url: jdbc:h2:file:./data/sportbooking;MODE=MySQL;AUTO_SERVER=TRUE
+    username: sa
+    password:
